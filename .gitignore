@@ -1,0 +1,29 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Keys and Secrets
+client_secrets.json
+token.json
+token_manage.json
+token_nexvora.json
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Media files (we download these dynamically or don't need to push large files)
+*.mp4
+*.mp3
+*.m4a
+*.jpg
+*.png
+*.webp
