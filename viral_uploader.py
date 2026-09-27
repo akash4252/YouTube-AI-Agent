@@ -39,6 +39,8 @@ def main():
 
     media = MediaFileUpload(video_file, chunksize=-1, resumable=True, mimetype="video/mp4")
 
+    from seo_optimizer import get_seo_metadata
+    seo = get_seo_metadata("TECH")
     request = youtube.videos().insert(
         part="snippet,status",
         body=request_body,

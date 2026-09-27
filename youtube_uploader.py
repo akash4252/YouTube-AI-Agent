@@ -52,17 +52,20 @@ def main():
         sys.exit(1)
 
     print(f"[*] Uploading {video_file} to YouTube...")
+    from seo_optimizer import get_seo_metadata
+    seo = get_seo_metadata("CR7")
     request = youtube.videos().insert(
         part="snippet,status",
         body={
           "snippet": {
-            "categoryId": "17", # 17 = Sports
-            "description": "5 Times Cristiano Ronaldo SHOCKED The World! 🤯🔥 Subscribe for daily CR7 magic! #ronaldo #cr7 #football #shorts",
-            "title": "5 Times Cristiano Ronaldo SHOCKED The World! 🤯🔥",
-            "tags": ["ronaldo", "cr7", "football", "shorts", "cristiano ronaldo", "highlights"]
+            "categoryId": "17",
+            "description": seo["description"],
+            "title": seo["title"],
+            "tags": seo["tags"]
           },
           "status": {
-            "privacyStatus": "private" # Kept private for testing. Change to 'public' later.
+            "privacyStatus": "public",
+            "selfDeclaredMadeForKids": False
           }
         },
         media_body=MediaFileUpload(video_file, chunksize=-1, resumable=True)
