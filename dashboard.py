@@ -1,13 +1,11 @@
 import streamlit as st
 import json
-import os
 import urllib.request
 import re
 
-# Premium Page Config
-st.set_page_config(page_title="AI Studio Pro", page_icon="⚡", layout="wide", initial_sidebar_state="expanded")
+# YouTube Studio Theme Config
+st.set_page_config(page_title="YouTube Studio AI", page_icon="▶️", layout="wide", initial_sidebar_state="expanded")
 
-# Function to search JSON for Video ID
 def find_key(obj, key):
     if isinstance(obj, dict):
         if key in obj: return obj[key]
@@ -20,28 +18,26 @@ def find_key(obj, key):
             if res is not None: return res
     return None
 
-# Live Data Fetcher (Subs, Videos, and Latest Video)
-@st.cache_data(ttl=1800)
+@st.cache_data(ttl=600)
 def get_live_stats(handle):
     try:
         url = f"https://www.youtube.com/{handle}"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         html = urllib.request.urlopen(req).read().decode('utf-8')
         match = re.search(r'var ytInitialData = ({.*?});</script>', html)
-        if not match: return "N/A", "N/A", None
+        if not match: return "N/A", "0", None
         data = json.loads(match.group(1))
         
         header = data.get('header', {}).get('pageHeaderRenderer', {}).get('content', {}).get('pageHeaderViewModel', {})
         metadata = header.get('metadata', {}).get('contentMetadataViewModel', {}).get('metadataRows', [])
-        subs, videos = "0 subscribers", "0 videos"
+        subs, videos = "0", "0"
         for row in metadata:
             parts = row.get('metadataParts', [])
             for part in parts:
                 text = part.get('text', {}).get('content', '')
-                if 'subscriber' in text.lower(): subs = text
-                elif 'video' in text.lower(): videos = text
+                if 'subscriber' in text.lower(): subs = text.replace(' subscribers', '').replace(' subscriber', '')
+                elif 'video' in text.lower(): videos = text.replace(' videos', '').replace(' video', '')
                 
-        # Find latest video ID
         vid = None
         try:
             url_shorts = f"https://www.youtube.com/{handle}/shorts"
@@ -56,79 +52,114 @@ def get_live_stats(handle):
             
         return subs, videos, vid
     except:
-        return "N/A", "N/A", None
+        return "N/A", "0", None
 
-# Hardcoded Default Channels
 DEFAULT_CHANNELS = {
-    "⚽ Ronaldo's Realm": {
-        "niche": "Sports & Football Edits",
-        "audience": "United States 🇺🇸",
-        "status": "Active - Daily Automation",
-        "handle": "@cr7realmofficial_c"
-    },
-    "🤖 Nexvora AI Tech": {
-        "niche": "Futuristic Tech & AI",
-        "audience": "United States 🇺🇸",
-        "status": "Active - Viral Engine",
-        "handle": "@NexvoraAITech"
-    }
+    "⚽ Ronaldo's Realm": {"handle": "@cr7realmofficial_c", "niche": "Sports"},
+    "🤖 Nexvora AI Tech": {"handle": "@NexvoraAITech", "niche": "Tech"}
 }
 
-# Custom CSS for Premium Look
+# YouTube Studio Custom CSS
 st.markdown("""
     <style>
-    .metric-card {background-color: #1E1E1E; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #333; box-shadow: 2px 2px 10px rgba(0,0,0,0.5);}
-    .title-text {font-weight: 800; color: #00ffcc; text-transform: uppercase;}
-    .stButton>button {background-color: #00ffcc; color: black; font-weight: bold; border-radius: 8px;}
-    .stButton>button:hover {background-color: #00ccaa; color: white;}
+    /* Global Dark Theme */
+    .stApp {background-color: #0f0f0f; color: #f1f1f1;}
+    .css-1d391kg {background-color: #0f0f0f;}
+    
+    /* Top Header */
+    .studio-header {font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 20px; font-family: "Roboto", sans-serif;}
+    
+    /* YouTube Table */
+    .yt-table {width: 100%; border-collapse: collapse; font-family: "Roboto", sans-serif; color: #fff; margin-top: 10px;}
+    .yt-table th {text-align: left; padding: 12px 16px; border-bottom: 1px solid #3d3d3d; color: #aaa; font-weight: 500; font-size: 13px;}
+    .yt-table td {padding: 12px 16px; border-bottom: 1px solid #3d3d3d; font-size: 14px; vertical-align: middle;}
+    .yt-row:hover {background-color: #272727;}
+    
+    /* Video Cell */
+    .vid-cell {display: flex; gap: 16px; align-items: flex-start;}
+    .thumb-box {width: 60px; height: 106px; background-color: #222; border-radius: 4px; overflow: hidden; position: relative; flex-shrink: 0;}
+    .thumb-box img {width: 100%; height: 100%; object-fit: cover;}
+    .time-badge {position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; font-weight: 500; padding: 2px 4px; border-radius: 4px;}
+    
+    .vid-text {display: flex; flex-direction: column; justify-content: center;}
+    .vid-title {font-weight: 500; color: #fff; font-size: 14px; line-height: 20px;}
+    .vid-desc {color: #aaa; font-size: 12px; margin-top: 4px;}
+    
+    /* Visibility Icon */
+    .visibility-public {display: flex; align-items: center; gap: 6px; color: #2ba640;}
+    .icon-globe {width: 16px; height: 16px; fill: currentColor;}
     </style>
 """, unsafe_allow_html=True)
 
-st.sidebar.title("⚡ AI Studio Pro")
-st.sidebar.markdown("---")
+# Sidebar (Studio Menu)
+with st.sidebar:
+    st.markdown("<h2 style='text-align: center; color: white;'>▶️ Studio</h2>", unsafe_allow_html=True)
+    st.markdown("---")
+    selected_channel = st.radio("Your channels", list(DEFAULT_CHANNELS.keys()))
+    
+    st.markdown("---")
+    st.success("🟢 Background AI Bot: Active")
 
-selected_channel = st.sidebar.radio("📌 Select Active Channel", list(DEFAULT_CHANNELS.keys()) + ["➕ Add New Channel"])
+st.markdown("<div class='studio-header'>Channel content</div>", unsafe_allow_html=True)
 
-if selected_channel == "➕ Add New Channel":
-    st.title("➕ Create New AI Channel")
-    st.markdown("Launch a new fully automated channel here.")
-    st.info("Feature locked in demo mode. Connect to database to activate.")
-else:
-    st.markdown(f"<h1 class='title-text'>{selected_channel}</h1>", unsafe_allow_html=True)
-    channel_info = DEFAULT_CHANNELS[selected_channel]
+# Fetch Data
+channel_info = DEFAULT_CHANNELS[selected_channel]
+subs, vids, latest_vid = get_live_stats(channel_info["handle"])
+
+# Tabs matching Studio
+tab1, tab2, tab3 = st.tabs(["Videos", "Shorts", "Live"])
+
+with tab2:
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    # Fetch Live Stats & Video
-    subs, vids, latest_vid = get_live_stats(channel_info["handle"])
+    # Generate HTML Table
+    html_code = """
+    <table class="yt-table">
+        <tr>
+            <th style="width: 40px;"><input type="checkbox"></th>
+            <th style="width: 400px;">Short</th>
+            <th>Visibility</th>
+            <th>Date ↓</th>
+            <th>Views</th>
+            <th>Comments</th>
+        </tr>
+    """
     
-    # Premium Tabs UI
-    tab1, tab2 = st.tabs(["📊 Live Analytics & Content", "⚙️ AI Automation Control"])
+    if latest_vid:
+        html_code += f"""
+        <tr class="yt-row">
+            <td><input type="checkbox"></td>
+            <td>
+                <div class="vid-cell">
+                    <div class="thumb-box">
+                        <img src="https://i.ytimg.com/vi/{latest_vid}/hqdefault.jpg">
+                        <span class="time-badge">0:35</span>
+                    </div>
+                    <div class="vid-text">
+                        <div class="vid-title">Automated AI Video</div>
+                        <div class="vid-desc">Uploaded by AI Agent • #shorts</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="visibility-public">
+                    <svg class="icon-globe" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="currentColor"/></svg>
+                    Public
+                </div>
+            </td>
+            <td>Today<br><span style="color:#aaa;font-size:12px;">Published</span></td>
+            <td>-</td>
+            <td>-</td>
+        </tr>
+        """
     
-    with tab1:
-        st.markdown("<br>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns(3)
-        with col1: st.markdown(f"<div class='metric-card'><h3>Live Subscribers</h3><p style='font-size: 24px; font-weight: bold; color: #ffeb3b;'>{subs}</p></div>", unsafe_allow_html=True)
-        with col2: st.markdown(f"<div class='metric-card'><h3>Total Uploads</h3><p style='font-size: 24px; font-weight: bold; color: #4caf50;'>{vids}</p></div>", unsafe_allow_html=True)
-        with col3: st.markdown(f"<div class='metric-card'><h3>Bot Status</h3><p style='font-size: 24px; font-weight: bold; color: #00ffcc;'>🟢 Running</p></div>", unsafe_allow_html=True)
-        
-        st.markdown("<hr>", unsafe_allow_html=True)
-        st.subheader("🎬 Latest AI Upload")
-        if latest_vid:
-            st.video(f"https://www.youtube.com/watch?v={latest_vid}")
-        else:
-            st.info("No videos found yet or fetching error. The AI is still preparing the upload!")
-        
-    with tab2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("🤖 Background Cloud Scheduler")
-        st.info("💡 The AI Brain is hosted securely on GitHub Actions. It will automatically wake up and upload videos every day.")
-        
-        st.success("✅ Daily Automation is LIVE and scheduled for US Peak Hours.")
-        
-        col_a, col_b = st.columns(2)
-        with col_a:
-            if st.button("🎬 Force Trigger Upload Now", use_container_width=True):
-                st.warning("Trigger signal sent to cloud! Video will be uploaded shortly.")
-                st.balloons()
-        with col_b:
-            if st.button("⏹️ Pause Automation", use_container_width=True):
-                st.error("Automation paused. (Demo button)")
+    html_code += "</table>"
+    st.markdown(html_code, unsafe_allow_html=True)
+    
+    if not latest_vid:
+        st.info("No Shorts found on this channel yet. AI is working on it!")
+
+with tab1:
+    st.markdown("### Videos")
+    st.write(f"Total uploads on channel: {vids}")
+    st.info("AI is currently set to generate Shorts only.")
