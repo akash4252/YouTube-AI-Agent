@@ -1,23 +1,36 @@
 import streamlit as st
 import json
 import os
-import time
 import urllib.request
 import re
 
 # Premium Page Config
 st.set_page_config(page_title="AI Studio Pro", page_icon="⚡", layout="wide", initial_sidebar_state="expanded")
 
-# Live Data Fetcher
-@st.cache_data(ttl=3600)
+# Function to search JSON for Video ID
+def find_key(obj, key):
+    if isinstance(obj, dict):
+        if key in obj: return obj[key]
+        for v in obj.values():
+            res = find_key(v, key)
+            if res is not None: return res
+    elif isinstance(obj, list):
+        for item in obj:
+            res = find_key(item, key)
+            if res is not None: return res
+    return None
+
+# Live Data Fetcher (Subs, Videos, and Latest Video)
+@st.cache_data(ttl=1800)
 def get_live_stats(handle):
     try:
         url = f"https://www.youtube.com/{handle}"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         html = urllib.request.urlopen(req).read().decode('utf-8')
         match = re.search(r'var ytInitialData = ({.*?});</script>', html)
-        if not match: return "N/A", "N/A"
+        if not match: return "N/A", "N/A", None
         data = json.loads(match.group(1))
+        
         header = data.get('header', {}).get('pageHeaderRenderer', {}).get('content', {}).get('pageHeaderViewModel', {})
         metadata = header.get('metadata', {}).get('contentMetadataViewModel', {}).get('metadataRows', [])
         subs, videos = "0 subscribers", "0 videos"
@@ -27,9 +40,23 @@ def get_live_stats(handle):
                 text = part.get('text', {}).get('content', '')
                 if 'subscriber' in text.lower(): subs = text
                 elif 'video' in text.lower(): videos = text
-        return subs, videos
+                
+        # Find latest video ID
+        vid = None
+        try:
+            url_shorts = f"https://www.youtube.com/{handle}/shorts"
+            req2 = urllib.request.Request(url_shorts, headers={'User-Agent': 'Mozilla/5.0'})
+            html2 = urllib.request.urlopen(req2).read().decode('utf-8')
+            match2 = re.search(r'var ytInitialData = ({.*?});</script>', html2)
+            if match2:
+                data2 = json.loads(match2.group(1))
+                vid = find_key(data2, 'videoId')
+        except:
+            pass
+            
+        return subs, videos, vid
     except:
-        return "N/A", "N/A"
+        return "N/A", "N/A", None
 
 # Hardcoded Default Channels
 DEFAULT_CHANNELS = {
@@ -70,11 +97,11 @@ else:
     st.markdown(f"<h1 class='title-text'>{selected_channel}</h1>", unsafe_allow_html=True)
     channel_info = DEFAULT_CHANNELS[selected_channel]
     
-    # Fetch Live Stats from YouTube
-    subs, vids = get_live_stats(channel_info["handle"])
+    # Fetch Live Stats & Video
+    subs, vids, latest_vid = get_live_stats(channel_info["handle"])
     
     # Premium Tabs UI
-    tab1, tab2 = st.tabs(["📊 Live Analytics", "⚙️ AI Automation Control"])
+    tab1, tab2 = st.tabs(["📊 Live Analytics & Content", "⚙️ AI Automation Control"])
     
     with tab1:
         st.markdown("<br>", unsafe_allow_html=True)
@@ -83,12 +110,12 @@ else:
         with col2: st.markdown(f"<div class='metric-card'><h3>Total Uploads</h3><p style='font-size: 24px; font-weight: bold; color: #4caf50;'>{vids}</p></div>", unsafe_allow_html=True)
         with col3: st.markdown(f"<div class='metric-card'><h3>Bot Status</h3><p style='font-size: 24px; font-weight: bold; color: #00ffcc;'>🟢 Running</p></div>", unsafe_allow_html=True)
         
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.subheader("📈 Projected Monthly Views (AI Forecast)")
-        if "Tech" in selected_channel:
-            st.area_chart([0, 100, 500, 2000, 5000, 15000, 30000])
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.subheader("🎬 Latest AI Upload")
+        if latest_vid:
+            st.video(f"https://www.youtube.com/watch?v={latest_vid}")
         else:
-            st.area_chart([0, 50, 300, 900, 2500, 8000, 20000])
+            st.info("No videos found yet or fetching error. The AI is still preparing the upload!")
         
     with tab2:
         st.markdown("<br>", unsafe_allow_html=True)
