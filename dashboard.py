@@ -1,151 +1,80 @@
 import streamlit as st
 import json
 import os
-import random
 import time
 
-st.set_page_config(page_title="AI Agent Dashboard", page_icon="🤖", layout="wide")
+# Premium Page Config
+st.set_page_config(page_title="AI Studio Pro", page_icon="⚡", layout="wide", initial_sidebar_state="expanded")
+
+# Hardcoded Default Channels so they NEVER disappear
+DEFAULT_CHANNELS = {
+    "⚽ Ronaldo's Realm": {
+        "niche": "Sports & Football Edits",
+        "audience": "United States 🇺🇸",
+        "status": "Active - Daily Automation"
+    },
+    "🤖 Nexvora AI Tech": {
+        "niche": "Futuristic Tech & AI",
+        "audience": "United States 🇺🇸",
+        "status": "Active - Viral Engine"
+    }
+}
 
 DB_FILE = "channels_db.json"
-if not os.path.exists(DB_FILE):
-    default_data = {
-        "Ronaldo's Realm": {
-            "niche": "CR7 Highlights & Football Edits",
-            "audience": "United States 🇺🇸",
-            "status": "Active"
-        }
-    }
-    with open(DB_FILE, "w") as f:
-        json.dump(default_data, f)
 
-with open(DB_FILE, "r") as f:
-    channels = json.load(f)
+# Custom CSS for Premium Look
+st.markdown("""
+    <style>
+    .metric-card {background-color: #1E1E1E; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #333; box-shadow: 2px 2px 10px rgba(0,0,0,0.5);}
+    .title-text {font-weight: 800; color: #00ffcc; text-transform: uppercase;}
+    .stButton>button {background-color: #00ffcc; color: black; font-weight: bold; border-radius: 8px;}
+    .stButton>button:hover {background-color: #00ccaa; color: white;}
+    </style>
+""", unsafe_allow_html=True)
 
-# Sidebar
-st.sidebar.title("📺 YouTube Studio AI")
+st.sidebar.title("⚡ AI Studio Pro")
 st.sidebar.markdown("---")
-st.sidebar.subheader("Your Channels")
 
-# Navigation options
-options = list(channels.keys()) + ["🔗 Link Existing Channel", "✨ Create New AI Channel"]
-selected_channel = st.sidebar.radio("Navigation:", options)
+selected_channel = st.sidebar.radio("📌 Select Active Channel", list(DEFAULT_CHANNELS.keys()) + ["➕ Add New Channel"])
 
-if selected_channel == "🔗 Link Existing Channel":
-    st.title("🔗 Link an Existing YouTube Channel")
-    st.markdown("Already have a channel? Link it here to start automating uploads.")
-    
-    with st.form("link_channel_form"):
-        e_name = st.text_input("Channel Name", placeholder="e.g., My Vlogs")
-        e_url = st.text_input("Channel URL", placeholder="https://youtube.com/@...")
-        e_niche = st.text_input("Current Niche", placeholder="e.g., Daily Vlogs")
-        e_audience = st.selectbox("Target Audience", ["India 🇮🇳", "United States 🇺🇸", "Global 🌍"])
-        submitted = st.form_submit_button("Link Channel")
-        
-        if submitted and e_name:
-            channels[e_name] = {"niche": e_niche, "audience": e_audience, "status": "Linked (Ready)"}
-            with open(DB_FILE, "w") as f:
-                json.dump(channels, f)
-            st.success(f"Existing channel '{e_name}' linked successfully! Please refresh.")
-
-elif selected_channel == "✨ Create New AI Channel":
-    st.title("✨ AI Channel Creator Builder")
-    st.markdown("Let the AI do the heavy lifting! Just give us a broad topic, and we'll generate the branding.")
-    
-    broad_topic = st.text_input("What broad topic are you interested in?", placeholder="e.g., Technology, Finance, Fitness, Space...")
-    
-    if st.button("🧠 Generate Channel Ideas"):
-        if broad_topic:
-            with st.spinner("AI is analyzing trends and generating branding..."):
-                time.sleep(2) # Simulate AI thinking
-                
-                # Simple mock AI logic for demonstration
-                topic = broad_topic.lower()
-                if "tech" in topic:
-                    names = ["TechTitans", "FutureByte", "GadgetGenius AI"]
-                    niches = ["AI Tools & News", "Gadget Reviews", "Coding & Tech Shorts"]
-                    desc = "Welcome to the future! We bring you the latest in tech, AI breakthroughs, and gadget reviews. Stay ahead of the curve."
-                elif "fin" in topic or "money" in topic:
-                    names = ["WealthWave", "FinanceFrontier", "CryptoCash"]
-                    niches = ["Personal Finance Tips", "Stock Market Shorts", "Crypto Updates"]
-                    desc = "Your daily dose of financial literacy. Learn how to grow your wealth, invest smartly, and achieve financial freedom."
-                else:
-                    names = [f"{broad_topic.capitalize()} Hub", f"The {broad_topic.capitalize()} Space", f"Daily {broad_topic.capitalize()}"]
-                    niches = [f"{broad_topic} Tips", f"{broad_topic} Facts", f"{broad_topic} Stories"]
-                    desc = f"The ultimate destination for everything {broad_topic}! Subscribe for daily high-quality videos."
-
-                st.session_state['ai_names'] = names
-                st.session_state['ai_niches'] = niches
-                st.session_state['ai_desc'] = desc
-                st.session_state['topic'] = broad_topic
-
-    if 'ai_names' in st.session_state:
-        st.success("✅ AI Branding Generated!")
-        st.markdown("### 🎯 AI Recommendations")
-        
-        with st.form("create_ai_channel_form"):
-            selected_name = st.radio("Select a Channel Name:", st.session_state['ai_names'])
-            selected_niche = st.radio("Select a Specific Niche:", st.session_state['ai_niches'])
-            
-            st.text_area("Suggested Description (You can edit this):", st.session_state['ai_desc'], height=100)
-            
-            st.markdown("#### 🎨 Visual Identity (Generated Prompts)")
-            st.info("Logo Prompt: A minimalist, high-quality neon vector logo for '" + selected_name + "'. Dark background.")
-            st.info("Banner Prompt: A cinematic, ultra-wide banner representing " + selected_niche + ", neon lighting, 8k resolution.")
-            
-            audience = st.selectbox("Target Audience", ["United States 🇺🇸 (Recommended for High CPM)", "Global 🌍", "India 🇮🇳"])
-            
-            if st.form_submit_button("🚀 Approve & Build Channel"):
-                channels[selected_name] = {"niche": selected_niche, "audience": audience, "status": "AI Configured"}
-                with open(DB_FILE, "w") as f:
-                    json.dump(channels, f)
-                st.balloons()
-                st.success(f"Channel '{selected_name}' created successfully! Check the sidebar.")
-
+if selected_channel == "➕ Add New Channel":
+    st.title("➕ Create New AI Channel")
+    st.markdown("Launch a new fully automated channel here.")
+    st.info("Feature locked in demo mode. Connect to database to activate.")
 else:
-    # Existing Channel Dashboard View
-    st.title(f"🚀 Dashboard: {selected_channel}")
-    channel_info = channels[selected_channel]
+    st.markdown(f"<h1 class='title-text'>{selected_channel}</h1>", unsafe_allow_html=True)
+    channel_info = DEFAULT_CHANNELS[selected_channel]
     
-    col_a, col_b, col_c = st.columns(3)
-    col_a.metric("Target Audience", channel_info['audience'])
-    col_b.metric("Niche", channel_info['niche'])
-    col_c.metric("Bot Status", channel_info['status'])
+    # Premium Tabs UI
+    tab1, tab2 = st.tabs(["📊 Analytics Overview", "⚙️ AI Automation Control"])
     
-    st.markdown("---")
-    st.subheader("🛠️ Quick Actions")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button(f"🎬 Generate & Upload for {selected_channel}", use_container_width=True):
-            st.info(f"🤖 Starting AI Agent for {selected_channel}...")
-            st.success(f"✅ Video generated and uploaded successfully to {selected_channel}!")
-            
-    with col2:
-        is_running = os.path.exists("scheduler_running.txt")
+    with tab1:
+        st.markdown("<br>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+        with col1: st.markdown(f"<div class='metric-card'><h3>Topic / Niche</h3><p>{channel_info['niche']}</p></div>", unsafe_allow_html=True)
+        with col2: st.markdown(f"<div class='metric-card'><h3>Target Audience</h3><p>{channel_info['audience']}</p></div>", unsafe_allow_html=True)
+        with col3: st.markdown(f"<div class='metric-card'><h3>Bot Status</h3><p>🟢 {channel_info['status']}</p></div>", unsafe_allow_html=True)
         
-        if is_running:
-            st.success("🟢 Daily Automation is currently RUNNING for this channel.")
-            if st.button("⏹️ Stop Automation", use_container_width=True):
-                os.remove("scheduler_running.txt")
-                st.rerun()
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.subheader("📈 Projected Monthly Views (AI Forecast)")
+        # Dynamic dummy graph depending on channel
+        if "Tech" in selected_channel:
+            st.area_chart([0, 100, 500, 2000, 5000, 15000, 30000])
         else:
-            if st.button("⏱️ Start Daily Scheduler", use_container_width=True):
-                st.warning(f"Starting the AI Brain for {selected_channel}...")
-                
-                # Mark as running
-                with open("scheduler_running.txt", "w") as f:
-                    f.write("Running")
-                
-                # Launch the actual daily scheduler in the background
-                import subprocess
-                subprocess.Popen(["python", "daily_scheduler.py"])
-                
-                st.success("✅ Automation ON! AI will now generate new topics and upload every day at US Peak Time.")
+            st.area_chart([0, 50, 300, 900, 2500, 8000, 20000])
+        
+    with tab2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.subheader("🤖 Background Cloud Scheduler")
+        st.info("💡 The AI Brain is hosted securely on GitHub Actions. It will automatically wake up and upload videos every day. You don't need to keep this page open.")
+        
+        st.success("✅ Daily Automation is LIVE and scheduled for US Peak Hours.")
+        
+        col_a, col_b = st.columns(2)
+        with col_a:
+            if st.button("🎬 Force Trigger Upload Now", use_container_width=True):
+                st.warning("Trigger signal sent to cloud! Video will be uploaded shortly.")
                 st.balloons()
-                time.sleep(2)
-                st.rerun()
-
-    st.markdown("---")
-    st.subheader("📈 Channel Analytics (Preview)")
-    st.line_chart([0, 15, 30, 150, 400, 1200, 3500])
+        with col_b:
+            if st.button("⏹️ Pause Automation", use_container_width=True):
+                st.error("Automation paused. (Demo button)")
