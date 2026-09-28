@@ -31,7 +31,6 @@ jobs:
 
     - name: Restore YouTube Tokens from Secrets
       run: |
-        # The tokens are stored securely in GitHub Secrets and created at runtime
         echo "${{ secrets.TOKEN_JSON }}" > token.json
         echo "${{ secrets.TOKEN_NEXVORA }}" > token_nexvora.json
         echo "${{ secrets.CLIENT_SECRETS }}" > client_secrets.json
