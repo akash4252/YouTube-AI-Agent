@@ -51,6 +51,12 @@ def main():
         response = request.execute()
         print("\n🎉 SUCCESS! VIRAL Tech Video Uploaded & PUBLISHED!")
         print(f"🔗 Video URL: https://www.youtube.com/watch?v={response['id']}")
+        
+        # --- INSTAGRAM REELS UPLOAD ---
+        from instagram_uploader import upload_to_instagram
+        ig_caption = f"{seo['title']}\n\n{seo['description']}"
+        upload_to_instagram(video_file, ig_caption, "TECH")
+
     except Exception as e:
         print(f"\n[!] An error occurred: {e}")
 

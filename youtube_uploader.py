@@ -75,6 +75,12 @@ def main():
         response = request.execute()
         print("\n🎉 SUCCESS! Video Uploaded!")
         print(f"🔗 Video URL: https://www.youtube.com/watch?v={response['id']}")
+        
+        # --- INSTAGRAM REELS UPLOAD ---
+        from instagram_uploader import upload_to_instagram
+        ig_caption = f"{seo['title']}\n\n{seo['description']}"
+        upload_to_instagram(video_file, ig_caption, "CR7")
+
     except googleapiclient.errors.HttpError as e:
         print(f"\n[!] An HTTP error {e.resp.status} occurred:\n{e.content}")
 
