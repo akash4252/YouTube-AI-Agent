@@ -54,6 +54,11 @@ def create_viral_video():
             
         print(f"[*] Using background video: {video_file}")
         bg_clip = VideoFileClip(video_file)
+    except Exception as e:
+        print(f"[!] Background video error: {e}")
+        from moviepy.editor import ColorClip
+        bg_clip = ColorClip(size=(1080, 1920), color=(15, 15, 30)).set_duration(duration)
+
     from moviepy.video.fx.all import loop, crop
     (w, h) = bg_clip.size
     target_w = h * 9 / 16
