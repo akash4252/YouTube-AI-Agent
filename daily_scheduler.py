@@ -35,6 +35,21 @@ print_log("🚀 MASTER AUTO-SCHEDULER ACTIVATED!")
 print_log("Channels Configured: [1] Ronaldo's Realm, [2] Nexvora AI Tech")
 print_log("Monitoring time for US Peak Hours (EST)...")
 
+if __name__ == "__main__":
+    while True:
+        now = datetime.datetime.now()
+        
+        # Upload Tech at 03:30 AM IST (6:00 PM EST - Evening Peak)
+        if now.hour == 3 and now.minute == 30:
+            run_tech_channel()
+            time.sleep(60) # Wait a minute to avoid double trigger
+            
+        # Upload CR7 at 04:30 AM IST (7:00 PM EST - Evening Peak)
+        if now.hour == 4 and now.minute == 30:
+            run_cr7_channel()
+            time.sleep(60)
+            
+        time.sleep(30)
 # In a real environment, this loop checks the time.
 # We simulate the daemon running indefinitely.
 while True:
