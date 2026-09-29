@@ -18,12 +18,8 @@ OUTPUT_VIDEO = "viral_shorts_tech.mp4"
 AUDIO_FILE = "voiceover_viral.mp3"
 THUMBNAIL_IMG = r"C:\Users\Admin\.gemini\antigravity\brain\6dfa25b6-ecc2-4d0b-a5b6-71c9d69d1942\viral_ai_thumbnail_1790511382647.jpg"
 
-SCRIPT = """
-Stop scrolling! If you are not using AI in 2026, you are already left behind.
-Artificial Intelligence is no longer just a trend, it is a global takeover.
-From generating hyper-realistic videos to writing thousands of lines of code in seconds.
-Subscribe to Nexvora A.I. Tech to learn how to survive and thrive in the matrix!
-"""
+from ai_script_writer import generate_viral_script
+SCRIPT = generate_viral_script("TECH")
 
 async def generate_voiceover():
     print(f"[*] Generating Viral AI Voiceover...")
@@ -56,7 +52,6 @@ def create_viral_video():
         bg_clip = VideoFileClip(video_file)
     except Exception as e:
         print(f"[!] Background video error: {e}")
-        from moviepy.editor import ColorClip
         bg_clip = ColorClip(size=(1080, 1920), color=(15, 15, 30)).set_duration(duration)
 
     from moviepy.video.fx.all import loop, crop
